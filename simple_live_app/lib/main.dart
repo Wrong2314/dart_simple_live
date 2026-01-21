@@ -72,16 +72,16 @@ void main() async {
 
 Future firstOpen() async {
   // 判定程序是否启动-- windows 交给原生
-  if (Platform.isWindows == false) {
-    if (!await FlutterSingleInstance().isFirstInstance()) {
-      Log.i("App is already running");
-      final err = await FlutterSingleInstance().focus();
-      if (err != null) {
-        Log.e("Error focusing running instance: $err", StackTrace.current);
-      }
-      exit(0);
-    }
-  }
+  // if (Platform.isWindows == false) {
+  //   if (!await FlutterSingleInstance().isFirstInstance()) {
+  //     Log.i("App is already running");
+  //     final err = await FlutterSingleInstance().focus();
+  //     if (err != null) {
+  //       Log.e("Error focusing running instance: $err", StackTrace.current);
+  //     }
+  //     exit(0);
+  //   }
+  // }
 }
 
 Future initWindow() async {
