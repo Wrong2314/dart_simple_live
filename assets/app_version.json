@@ -1,7 +1,7 @@
 {
   "version": "1.8.6",
-  "version_num": 10806,
-  "version_desc": "- 修复 macOS 启动闪退问题\n- 仅保留macOS打包构建",
+  "version_num": 10807,
+  "version_desc": "- 修复 macOS 启动闪退问题\n- 添加关闭窗口快捷键\n- 仅保留 macOS 打包构建",
   "prerelease": false,
   "download_url": "https://github.com/Wrong2314/dart_simple_live/releases"
 }
