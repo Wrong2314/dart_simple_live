@@ -1,8 +1,0 @@
-display_name: Slive
-publisher_display_name: slotsun
-identity_name: com.slotsun.slive
-logo_path: assets/logo_400.png
-capabilities: internetClient
-languages: zh-cn
-install_certificate: "false"
-signtool_options: /td SHA256
