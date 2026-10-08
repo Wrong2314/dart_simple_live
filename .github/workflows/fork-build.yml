@@ -1,0 +1,157 @@
+name: Fork builds
+run-name: Build ${{ github.ref_name }} (${{ inputs.revision || github.sha }})
+
+on:
+  push:
+    branches: [dev, master]
+    paths:
+      - 'simple_live_app/**'
+      - 'simple_live_core/**'
+      - '.github/workflows/fork-build.yml'
+      - '.github/scripts/prepare_fork_build.py'
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: Exact commit to build (leave empty for selected branch)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fork-build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.repository == 'Wrong2314/dart_simple_live'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: android
+            runner: ubuntu-latest
+          - platform: windows
+            runner: windows-latest
+          - platform: macos
+            runner: macos-latest
+          - platform: ios
+            runner: macos-latest
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.revision || github.sha }}
+      - name: Select Xcode
+        if: runner.os == 'macOS'
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - uses: actions/setup-java@v4
+        if: matrix.platform == 'android'
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+        if: matrix.platform == 'android'
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Rust targets
+        shell: bash
+        run: |
+          case '${{ matrix.platform }}' in
+            android) rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android ;;
+            macos) rustup target add aarch64-apple-darwin x86_64-apple-darwin ;;
+            ios) rustup target add aarch64-apple-ios ;;
+          esac
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version-file: simple_live_app/pubspec.yaml
+          cache: true
+      - name: Prepare fork build
+        shell: bash
+        run: python .github/scripts/prepare_fork_build.py '${{ matrix.platform }}'
+      - name: Cache Android test signing key
+        if: matrix.platform == 'android'
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: fork-android-test-signing-v1
+      - name: Configure Android test signing
+        if: matrix.platform == 'android'
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.android"
+          if [ ! -f "$HOME/.android/debug.keystore" ]; then
+            keytool -genkeypair -keystore "$HOME/.android/debug.keystore" -storepass android \
+              -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname 'CN=Android Debug,O=Android,C=US'
+          fi
+          cat > simple_live_app/android/key.properties <<EOF
+          storeFile=$HOME/.android/debug.keystore
+          storePassword=android
+          keyPassword=android
+          keyAlias=androiddebugkey
+          EOF
+      - name: Install dependencies
+        working-directory: simple_live_app
+        run: flutter pub get
+      - name: Category regression tests
+        if: matrix.platform == 'android'
+        working-directory: simple_live_app
+        run: flutter test test/douyin_category_navigation_test.dart
+      - name: Category parser tests
+        if: matrix.platform == 'android'
+        working-directory: simple_live_core
+        run: |
+          flutter pub get
+          dart test test/douyin_category_parser_test.dart
+      - name: Build Android APKs
+        if: matrix.platform == 'android'
+        working-directory: simple_live_app
+        run: flutter build apk --release --split-per-abi
+      - name: Build Windows
+        if: matrix.platform == 'windows'
+        working-directory: simple_live_app
+        run: flutter build windows --release
+      - name: Build macOS
+        if: matrix.platform == 'macos'
+        working-directory: simple_live_app
+        run: flutter build macos --release
+      - name: Build unsigned iOS
+        if: matrix.platform == 'ios'
+        working-directory: simple_live_app
+        run: flutter build ios --release --no-codesign
+      - name: Package Android
+        if: matrix.platform == 'android'
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp simple_live_app/build/app/outputs/flutter-apk/*-release.apk dist/
+      - name: Package Windows
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist
+          Compress-Archive -Path simple_live_app/build/windows/x64/runner/Release/* -DestinationPath dist/Slive-windows.zip
+      - name: Package macOS
+        if: matrix.platform == 'macos'
+        shell: bash
+        run: |
+          mkdir -p dist
+          ditto -c -k --sequesterRsrc --keepParent 'simple_live_app/build/macos/Build/Products/Release/Simple Live.app' dist/Slive-macos.zip
+      - name: Package unsigned IPA
+        if: matrix.platform == 'ios'
+        shell: bash
+        run: |
+          mkdir -p dist Payload
+          cp -R simple_live_app/build/ios/iphoneos/Runner.app Payload/
+          zip -qr dist/Slive-ios-unsigned.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Slive-${{ github.ref_name }}-${{ matrix.platform }}-${{ github.run_number }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14

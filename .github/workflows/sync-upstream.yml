@@ -1,0 +1,41 @@
+name: Sync upstream
+
+on:
+  schedule:
+    # 16:00 UTC = 00:00 Asia/Shanghai. GitHub may delay scheduled runs.
+    - cron: '0 16 * * *'
+  workflow_dispatch:
+    inputs:
+      force_build:
+        description: Build both branches even if their commits already have runs
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.repository == 'Wrong2314/dart_simple_live'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: [dev, master]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0
+      - name: Merge upstream and dispatch build
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SYNC_BRANCH: ${{ matrix.branch }}
+          FORCE_BUILD: ${{ inputs.force_build || false }}
+        run: python3 .github/scripts/sync_upstream.py
