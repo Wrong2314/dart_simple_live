@@ -25,11 +25,13 @@ class LiveSubCategory {
   final String? pic;
   final String id;
   final String parentId;
+  final List<LiveSubCategory> children;
   LiveSubCategory({
     required this.id,
     required this.name,
     required this.parentId,
     this.pic,
+    this.children = const [],
   });
 
   @override

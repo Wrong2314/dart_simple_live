@@ -31,6 +31,7 @@ class CategoryController extends BasePageController<AppLiveCategory> {
 
 class AppLiveCategory extends LiveCategory {
   var showAll = false.obs;
+  final expandedCategory = Rxn<LiveSubCategory>();
   final List<LiveSubCategoryExt> childrenExt;
   AppLiveCategory({
     required super.id,
@@ -42,6 +43,7 @@ class AppLiveCategory extends LiveCategory {
                   name: e.name,
                   parentId: e.parentId,
                   pic: e.pic,
+                  children: e.children,
                 ))
             .toList() {
     showAll.value = children.length < 19;
@@ -66,6 +68,7 @@ class LiveSubCategoryExt extends LiveSubCategory {
     required super.name,
     required super.parentId,
     super.pic,
+    super.children,
   });
 
   AppFocusNode focusNode = AppFocusNode();

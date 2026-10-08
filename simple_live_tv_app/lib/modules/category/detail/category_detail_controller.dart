@@ -1,12 +1,12 @@
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:simple_live_tv_app/app/controller/base_controller.dart';
 import 'package:simple_live_tv_app/app/sites.dart';
-import 'package:simple_live_tv_app/modules/category/category_controller.dart';
+import 'package:simple_live_core/simple_live_core.dart';
 import 'package:simple_live_tv_app/modules/hot_live/hot_live_controller.dart';
 
 class CategoryDetailController extends BasePageController<LiveRoomItemExt> {
   final Site site;
-  final LiveSubCategoryExt subCategory;
+  final LiveSubCategory subCategory;
   CategoryDetailController({
     required this.site,
     required this.subCategory,

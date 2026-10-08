@@ -122,17 +122,18 @@ class CategoryPage extends GetView<CategoryController> {
                           children: item.showAll.value
                               ? (item.childrenExt
                                   .map(
-                                    (e) => buildSubCategory(e),
+                                    (e) => buildSubCategory(context, item, e),
                                   )
                                   .toList())
                               : (item.take15
                                   .map(
-                                    (e) => buildSubCategory(e),
+                                    (e) => buildSubCategory(context, item, e),
                                   )
                                   .toList()
                                 ..add(buildShowMore(item))),
                         ),
                       ),
+                      buildExpandedCategory(item),
                     ],
                   );
                 },
@@ -144,11 +145,18 @@ class CategoryPage extends GetView<CategoryController> {
     );
   }
 
-  Widget buildSubCategory(LiveSubCategoryExt item) {
+  Widget buildSubCategory(
+      BuildContext context, AppLiveCategory category, LiveSubCategoryExt item) {
     return HighlightWidget(
       focusNode: item.focusNode,
+      selected: category.expandedCategory.value?.id == item.id,
       onTap: () {
-        AppNavigator.toCategoryDetail(site: controller.site, category: item);
+        if (item.children.isEmpty) {
+          AppNavigator.toCategoryDetail(site: controller.site, category: item);
+        } else {
+          category.expandedCategory.value =
+              category.expandedCategory.value?.id == item.id ? null : item;
+        }
       },
       color: Colors.white10,
       borderRadius: AppStyle.radius16,
@@ -173,13 +181,60 @@ class CategoryPage extends GetView<CategoryController> {
             item.name,
             maxLines: 1,
             textAlign: TextAlign.center,
-            style: item.focusNode.isFoucsed.value
+            style: (item.focusNode.isFoucsed.value ||
+                    category.expandedCategory.value?.id == item.id)
                 ? AppStyle.textStyleBlack
                 : AppStyle.textStyleWhite,
           ),
         ],
       ),
     );
+  }
+
+  Widget buildExpandedCategory(AppLiveCategory category) {
+    return Obx(() {
+      final expanded = category.expandedCategory.value;
+      if (expanded == null) return const SizedBox.shrink();
+      return Container(
+        margin: EdgeInsets.symmetric(vertical: 24.w),
+        padding: EdgeInsets.all(24.w),
+        decoration: BoxDecoration(
+            color: Colors.white10, borderRadius: AppStyle.radius16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(children: [
+              Expanded(
+                  child: Text(expanded.name, style: AppStyle.titleStyleWhite)),
+              TextButton(
+                  onPressed: () => category.expandedCategory.value = null,
+                  child: const Text('收起')),
+            ]),
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 6,
+              childAspectRatio: 3,
+              crossAxisSpacing: 16.w,
+              mainAxisSpacing: 16.w,
+              children: [
+                TextButton(
+                  onPressed: () => AppNavigator.toCategoryDetail(
+                      site: controller.site, category: expanded),
+                  child: const Text('全部'),
+                ),
+                ...expanded.children.map((game) => TextButton(
+                      onPressed: () => AppNavigator.toCategoryDetail(
+                          site: controller.site, category: game),
+                      child: Text(game.name,
+                          maxLines: 2, textAlign: TextAlign.center),
+                    )),
+              ],
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   Widget buildShowMore(AppLiveCategory item) {

@@ -6,6 +6,7 @@ import 'package:simple_live_core/src/common/convert_helper.dart';
 import 'package:simple_live_core/src/common/http_client.dart';
 import 'package:simple_live_core/src/platforms/douyin/douyin_utils.dart';
 import 'douyin_request_params.dart';
+import 'douyin_category_parser.dart';
 
 class DouyinSite implements LiveSite {
   @override
@@ -85,46 +86,12 @@ class DouyinSite implements LiveSite {
 
   @override
   Future<List<LiveCategory>> getCategories() async {
-    List<LiveCategory> categories = [];
-    var result = await HttpClient.instance.getText(
-      "https://live.douyin.com/",
+    final result = await HttpClient.instance.getText(
+      "https://live.douyin.com/categorynew/4_103",
       queryParameters: {},
       header: await getRequestHeaders(),
     );
-
-    var renderData = RegExp(r'\{\\"pathname\\":\\"\/\\",\\"categoryData.*?\],').firstMatch(result)?.group(0) ?? "";
-    var renderDataJson =
-        json.decode(renderData.trim().replaceAll('\\"', '"').replaceAll(r"\\", r"\").replaceAll('],', ""));
-
-    for (var item in renderDataJson["categoryData"]) {
-      List<LiveSubCategory> subs = [];
-      var id = '${item["partition"]["id_str"]},${item["partition"]["type"]}';
-      for (var subItem in item["sub_partition"]) {
-        var subCategory = LiveSubCategory(
-          id: '${subItem["partition"]["id_str"]},${subItem["partition"]["type"]}',
-          name: asT<String?>(subItem["partition"]["title"]) ?? "",
-          parentId: id,
-          pic: "",
-        );
-        subs.add(subCategory);
-      }
-
-      var category = LiveCategory(
-        children: subs,
-        id: id,
-        name: asT<String?>(item["partition"]["title"]) ?? "",
-      );
-      subs.insert(
-          0,
-          LiveSubCategory(
-            id: category.id,
-            name: category.name,
-            parentId: category.id,
-            pic: "",
-          ));
-      categories.add(category);
-    }
-    return categories;
+    return DouyinCategoryParser.parse(result);
   }
 
   @override
