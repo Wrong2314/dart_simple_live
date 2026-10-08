@@ -10,3 +10,6 @@ build/
 dev-tool.ps1
 *.py
 simple_live_app/iconfont.yaml
+
+# Versioned fork automation scripts
+!.github/scripts/*.py

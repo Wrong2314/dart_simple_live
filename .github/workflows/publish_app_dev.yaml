@@ -3,6 +3,7 @@ name: app-build-action-dev
 on:
   workflow_dispatch:
   push:
+    if: github.repository == 'SlotSun/dart_simple_live'
     branches:
       - 'dev'
 
@@ -15,6 +16,7 @@ jobs:
 
   # packing android on ubuntu, macos slowly
   build-android:
+    if: github.repository == 'SlotSun/dart_simple_live'
     runs-on: ubuntu-latest
     permissions: write-all
 
@@ -83,6 +85,7 @@ jobs:
 
   # 打包iOS、Mac
   build-mac-ios:
+    if: github.repository == 'SlotSun/dart_simple_live'
     runs-on: macos-latest
 
     permissions:
@@ -173,6 +176,7 @@ jobs:
 
   # 打包 Linux
   build-linux:
+    if: github.repository == 'SlotSun/dart_simple_live'
     strategy:
       matrix:
         include:
@@ -250,6 +254,7 @@ jobs:
 
   # 打包 Windows
   build-windows:
+    if: github.repository == 'SlotSun/dart_simple_live'
     runs-on: windows-latest
     permissions:
       contents: write
@@ -311,6 +316,7 @@ jobs:
 
   # 打包 Flatpak
   build-flatpak:
+    if: github.repository == 'SlotSun/dart_simple_live'
     strategy:
       matrix:
         include:
