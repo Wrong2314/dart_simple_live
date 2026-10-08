@@ -17,6 +17,7 @@ class CategoryListController extends BasePageController<AppLiveCategory> {
 
 class AppLiveCategory extends LiveCategory {
   var showAll = false.obs;
+  final expandedCategory = Rxn<LiveSubCategory>();
   AppLiveCategory({
     required super.id,
     required super.name,

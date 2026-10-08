@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:simple_live_tv_app/app/constant.dart';
 import 'package:simple_live_tv_app/app/controller/app_settings_controller.dart';
 import 'package:simple_live_tv_app/app/sites.dart';
-import 'package:simple_live_tv_app/modules/category/category_controller.dart';
+import 'package:simple_live_core/simple_live_core.dart';
 import 'package:simple_live_tv_app/routes/route_path.dart';
 import 'package:simple_live_tv_app/services/bilibili_account_service.dart';
 
@@ -36,7 +36,7 @@ class AppNavigator {
 
   /// 跳转至分类详情
   static void toCategoryDetail(
-      {required Site site, required LiveSubCategoryExt category}) {
+      {required Site site, required LiveSubCategory category}) {
     Get.toNamed(RoutePath.kCategoryDetail, arguments: [site, category]);
   }
 }
