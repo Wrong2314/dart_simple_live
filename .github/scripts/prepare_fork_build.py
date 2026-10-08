@@ -4,10 +4,11 @@ import sys
 
 
 def replace_once(path, before, after):
-    text = path.read_text()
+    text = path.read_text(encoding="utf-8")
     if text.count(before) != 1:
         raise RuntimeError(f'Upstream structure changed; review CI preparation: {path}')
-    path.write_text(text.replace(before, after, 1))
+    with path.open("w", encoding="utf-8", newline="\n") as output:
+        output.write(text.replace(before, after, 1))
 
 
 def main():
