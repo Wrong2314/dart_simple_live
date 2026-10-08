@@ -44,6 +44,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.revision || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Select Xcode
         if: runner.os == 'macOS'
         uses: maxim-lobanov/setup-xcode@v1
